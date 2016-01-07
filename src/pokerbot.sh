@@ -1,1 +1,1 @@
-python Player.py "$@"
+./player "$@"
