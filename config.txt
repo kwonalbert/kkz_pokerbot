@@ -19,26 +19,27 @@ DUPLICATE = true
 # FOLDER: Automatically compiles and runs a bot from source.
 # Requires PATH, which is either an absolute or relative (to the jar) path
 # pointing to the source code.
-#   PLAYER_1_TYPE = FOLDER 
-#   PLAYER_1_PATH = .
-#   PLAYER_1_SCONS_ARGS = 
-#   PLAYER_1_NAME = FOLDERBOT
-#   PLAYER_1_RESET_KEYS = false
+PLAYER_1_TYPE = FOLDER
+PLAYER_1_PATH = src
+# PLAYER_1_SCONS_ARGS =
+PLAYER_1_NAME = kkz
+PLAYER_1_RESET_KEYS = false
 
 # SOCKET: Engine will wait for bot to connect to a designed socket.
-#   PLAYER_2_TYPE = SOCKET
-#   PLAYER_2_NAME = SOCKETBOT
+#  PLAYER_2_TYPE = SOCKET
+#  PLAYER_2_NAME = SOCKETBOT
 
 # RANDOM: Engine will use its own bot that plays randomly.
-#   PLAYER_1_TYPE = RANDOM
-#   PLAYER_1_NAME = RANDOMBOT
+#  PLAYER_1_TYPE = RANDOM
+#  PLAYER_1_NAME = RANDOMBOT
 
 # CHECKFOLD: Engine will use its own bot that checks/folds as appropriate.
-#   PLAYER_2_TYPE = CHECKFOLD
-#   PLAYER_2_NAME = CHECKFOLDBOT
+ PLAYER_2_TYPE = CHECKFOLD
+ PLAYER_2_NAME = CHECKFOLDBOT
 
-PLAYER_1_TYPE = CHECKFOLD
-PLAYER_1_NAME = test1
+# Test bots
+#  PLAYER_1_TYPE = CHECKFOLD
+#  PLAYER_1_NAME = test1
 
-PLAYER_2_TYPE = CHECKFOLD
-PLAYER_2_NAME = test2
+#  PLAYER_2_TYPE = CHECKFOLD
+#  PLAYER_2_NAME = test2
