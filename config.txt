@@ -26,8 +26,8 @@ PLAYER_1_NAME = kkz
 PLAYER_1_RESET_KEYS = false
 
 # SOCKET: Engine will wait for bot to connect to a designed socket.
-#  PLAYER_2_TYPE = SOCKET
-#  PLAYER_2_NAME = SOCKETBOT
+# PLAYER_1_TYPE = SOCKET
+# PLAYER_1_NAME = kkz
 
 # RANDOM: Engine will use its own bot that plays randomly.
  PLAYER_2_TYPE = RANDOM
