@@ -30,12 +30,12 @@ PLAYER_1_RESET_KEYS = false
 #  PLAYER_2_NAME = SOCKETBOT
 
 # RANDOM: Engine will use its own bot that plays randomly.
-#  PLAYER_1_TYPE = RANDOM
-#  PLAYER_1_NAME = RANDOMBOT
+ PLAYER_2_TYPE = RANDOM
+ PLAYER_2_NAME = RANDOMBOT
 
 # CHECKFOLD: Engine will use its own bot that checks/folds as appropriate.
- PLAYER_2_TYPE = CHECKFOLD
- PLAYER_2_NAME = CHECKFOLDBOT
+ # PLAYER_2_TYPE = CHECKFOLD
+ # PLAYER_2_NAME = CHECKFOLDBOT
 
 # Test bots
 #  PLAYER_1_TYPE = CHECKFOLD
