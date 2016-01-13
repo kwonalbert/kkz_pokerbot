@@ -2,8 +2,15 @@ import os
 # On Windows, the path is incorrect, so change the path to
 # the environment one. Even though windows is the problem,
 # do it for all platforms
-newpath=os.environ.get('PATH')
-env = Environment(ENV = { 'PATH' : newpath }, CCFLAGS='-O3 -std=c++11')
 
-boost_libs = ['boost_program_options', 'boost_system', 'pthread']
-env.Program('player', ['main.cpp', 'player.cpp'], LIBS=boost_libs)
+newpath=os.environ.get('PATH')
+env = Environment(ENV = { 'PATH' : newpath }, CCFLAGS='-O3 -std=c++11 -I. -Ipokerstove -g')
+
+peval_srcs = ['pokerstove/peval/Card.cpp', 'pokerstove/peval/CardSet.cpp', 'pokerstove/peval/CardSetGenerators.cpp',
+              'pokerstove/peval/PokerEvaluation.cpp', 'pokerstove/peval/PokerHand.cpp',
+              'pokerstove/peval/PokerHandEvaluator_Alloc.cpp', 'pokerstove/peval/PokerHandEvaluator.cpp',
+              'pokerstove/peval/Rank.cpp', 'pokerstove/peval/Suit.cpp']
+
+libs = ['boost_program_options', 'boost_system', 'pthread']
+env.Library('peval', peval_srcs)
+env.Program('player', ['main.cpp', 'player.cpp', 'libpeval.a'], LIBS=libs)

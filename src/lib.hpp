@@ -21,10 +21,7 @@ struct newgame {
 struct newhand {
         int hand_id;
         bool button;
-        std::string holecard1;
-        std::string holecard2;
-        std::string holecard3;
-        std::string holecard4;
+        vector<std::string> holecards;
         int my_bank;
         int other_bank;
         double time_bank;
@@ -165,18 +162,17 @@ newhand parse_newhand(vector<StringRef> splits) {
                 button = false;
         else
                 button = true;
-        std::string holecard1(splits[count].begin(), splits[count].size()); count++;
-        std::string holecard2(splits[count].begin(), splits[count].size()); count++;
-        std::string holecard3(splits[count].begin(), splits[count].size()); count++;
-        std::string holecard4(splits[count].begin(), splits[count].size()); count++;
+        vector<std::string> holecards;
+        for (int i = 0; i < 4; i++) {
+                std::string holecard(splits[count].begin(), splits[count].size()); count++;
+                holecards.push_back(holecard);
+        }
         int my_bank = atoi(splits[count].begin(), splits[count].size()); count++;
         int other_bank = atoi(splits[count].begin(), splits[count].size()); count++;
         std::string time_str(splits[count].begin(), splits[count].size());
         float time_bank = boost::lexical_cast<double>(time_str);
         newhand nh;
-        nh.hand_id = hand_id; nh.button = button;
-        nh.holecard1 = holecard1; nh.holecard2 = holecard2;
-        nh.holecard3 = holecard3; nh.holecard4 = holecard4;
+        nh.hand_id = hand_id; nh.button = button; nh.holecards = holecards;
         nh.my_bank = my_bank; nh.other_bank = other_bank; nh.time_bank = time_bank;
         return nh;
 }

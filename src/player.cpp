@@ -6,7 +6,7 @@
 #include <boost/format.hpp>
 #include "player.hpp"
 #include "lib.hpp"
-#include "peval/PokerHandEvaluator.h"
+#include "pokerstove/peval/PokerHandEvaluator.h"
 
 using namespace std;
 namespace po = boost::program_options;
@@ -23,20 +23,16 @@ public:
         {}
 
     void evaluate() {
-        for (auto it=_hands.begin(); it!=_hands.end(); it++) {
-                string& hand = *it;
-                _results[hand] = _peval->evaluate(hand, _board);
-        }
+            CardSet hand = CardSet();
+            for (int i = 0; i < 4; i++)
+                    hand.insert(CardSet(_hands[i]));
+            _result = _peval->evaluate(hand, _board);
     }
 
     string str() const {
         string ret;
-        for (auto it=_hands.begin(); it!=_hands.end(); it++) {
-                const string& hand = *it;
-                ret += boost::str(boost::format("%10s: %s\n")
-                                  % hand
-                                  % _results.at(hand).str());
-        }
+        ret = boost::str(boost::format("%s\n")
+                         % _result.str());
         return ret;
     }
 
@@ -44,7 +40,7 @@ private:
     boost::shared_ptr<PokerHandEvaluator> _peval;
     vector<string> _hands;
     string _board;
-    map<string,PokerHandEvaluation> _results;
+    PokerHandEvaluation _result;
 };
 
 Player::Player() {
@@ -60,27 +56,44 @@ Player::Player() {
  */
 void Player::run(tcp::iostream &stream) {
         std::string line;
-        std::string new_game("NEWGAME");
-        std::string new_hand("NEWHAND");
-        std::string get_action("GETACTION");
-        std::string hand_over("HANDOVER");
-        std::string request_keyvalue_action("REQUESTKEYVALUES");
+        vector<std::string> cur_hand;
+        std::string game("O");
         while (std::getline(stream, line)) {
                 // For now, just print out whatever date is read in.
                 std::cout << line << "\n";
                 vector<StringRef> splits = split(line);
 
-                std::string first_word = line.substr(0, line.find_first_of(' '));
-                if (new_game.compare(first_word) == 0) {
+                if (strncmp("NEWGAME", splits[0].begin(), 7) == 0) {
                         newgame ng = parse_newgame(splits);
-                } else if (new_hand.compare(first_word) == 0) {
+                } else if (strncmp("NEWHAND", splits[0].begin(), 7) == 0) {
                         newhand nh = parse_newhand(splits);
-                } else if (get_action.compare(first_word) == 0) {
+                        cur_hand = nh.holecards;
+                } else if (strncmp("GETACTION", splits[0].begin(), 9) == 0) {
                         getaction ga = parse_getaction(splits);
+
+                        // std::string board = "";
+                        // for (int i = 0; i < ga.num_board_cards; i++)
+                        //         board += ga.board_cards[i];
+                        std::string board = "4d9dAh9s3c";
+
+                        std::cout << "HAND:";
+                        for (int i = 0; i < 4; i++)
+                                std::cout << cur_hand[i];
+                        std::cout << "\nBOARD:";
+                        std::cout << board << "\n";
+
+                        // vector<std::string> new_hand;
+                        // new_hand.push_back("9c");
+                        // new_hand.push_back("9h");
+
+                        EvalDriver driver(game, cur_hand, board);
+                        driver.evaluate();
+                        // std::cout << driver.str() << "\n";
+
                         stream << "CALL\n";
-                } else if (hand_over.compare(first_word) == 0) {
+                } else if (strncmp("HANDOVER", splits[0].begin(), 8) == 0) {
                         handover ho = parse_handover(splits);
-                } else if (request_keyvalue_action.compare(first_word) == 0) {
+                } else if (strncmp("REQUESTKEYVALUES", splits[0].begin(), 16) == 0) {
                         // FINISh indicates no more keyvalue pairs to store.
                         stream << "FINISH\n";
                 }

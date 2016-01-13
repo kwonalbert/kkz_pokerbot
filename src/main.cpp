@@ -2,7 +2,7 @@
 #include <boost/program_options.hpp>
 #include <boost/asio.hpp>
 #include "player.hpp"
-#include "peval/PokerHandEvaluator.h"
+#include "pokerstove/peval/PokerHandEvaluator.h"
 
 namespace opt = boost::program_options;
 
