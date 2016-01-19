@@ -261,9 +261,10 @@ public:
         int degeneracy;
         int degeneracyCount = 0;
         string newBoard;
+
         for (int i = 0; i < turnCounter; i++) //Complete the board and run evaluate
         {
-            for (int j = 0; riverCardNum[j] <= turnCardNum[i]; j++)
+            for (int j = 0; j < turnCounter && riverCardNum[j] <= turnCardNum[i]; j++)
             {
                 if(j < riverCounter && riverCards[j] != turnCards[i])  // make sure we are only doing river cards that are up to the turn card and that the turn and river cards are not the same card
                 {
