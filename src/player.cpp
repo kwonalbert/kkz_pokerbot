@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <boost/program_options.hpp>
@@ -46,6 +47,8 @@ private:
 Player::Player() {
 }
 
+std::map<std::string, int> preflop;
+
 /**
  * Simple example pokerbot, written in C++.
  *
@@ -68,6 +71,7 @@ void Player::run(tcp::iostream &stream) {
                 } else if (strncmp("NEWHAND", splits[0].begin(), 7) == 0) {
                         newhand nh = parse_newhand(splits);
                         cur_hand = nh.holecards;
+                        std::sort(cur_hand.begin(), cur_hand.end());
                 } else if (strncmp("GETACTION", splits[0].begin(), 9) == 0) {
                         getaction ga = parse_getaction(splits);
 
@@ -77,8 +81,13 @@ void Player::run(tcp::iostream &stream) {
                         std::string board = "4d9dAh9s3c";
 
                         std::cout << "HAND:";
-                        for (int i = 0; i < 4; i++)
+                        std::string hand = "";
+                        for (int i = 0; i < 4; i++) {
                                 std::cout << cur_hand[i];
+                                hand += cur_hand[i];
+                        }
+                        std::cout << "\nSCORE:";
+                        std::cout << preflop[hand];
                         std::cout << "\nBOARD:";
                         std::cout << board << "\n";
 

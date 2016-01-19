@@ -5,6 +5,8 @@
 
 using boost::asio::ip::tcp;
 
+extern std::map<std::string, int> preflop;
+
 class Player {
  public:
   Player();

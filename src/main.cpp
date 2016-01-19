@@ -1,4 +1,7 @@
 #include <iostream>
+#include <fstream>
+#include <map>
+#include <string>
 #include <boost/program_options.hpp>
 #include <boost/asio.hpp>
 #include "player.hpp"
@@ -32,6 +35,13 @@ int main(int argc, char *argv[])
     std::cerr << e.what() << std::endl;
     return 1;
   }
+
+  // Read the preflop analysis database
+  std::ifstream rawdata("preflop.data");
+  std::string key;
+  int value;
+  while (rawdata >> key >> value)
+          preflop[key] = value;
 
   // Connect to the engine.
   tcp::iostream stream;
