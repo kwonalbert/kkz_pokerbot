@@ -604,7 +604,7 @@ Player::Player() {
 
 std::map<std::string, int> preflop;
 
-double pre_fold_thresh = 0.04;
+double pre_fold_thresh = 0.065;
 double pre_raise_thresh = 0.14;
 
 double flop_avg = 43;
@@ -669,7 +669,6 @@ void Player::run(tcp::iostream &stream) {
 
                 if (strncmp("NEWGAME", splits[0].begin(), 7) == 0) {
                         newgame ng = parse_newgame(splits);
-                        pre = true;
                 } else if (strncmp("NEWHAND", splits[0].begin(), 7) == 0) {
                         newhand nh = parse_newhand(splits);
                         cur_hand = nh.holecards;
@@ -694,7 +693,7 @@ void Player::run(tcp::iostream &stream) {
                         EvalDriver driver(game, cur_hand, board);
                         double strength;
                         if (ga.num_board_cards == 0) {
-                                strength = (double) preflop[hand]/10000;
+                                strength = (double) preflop[hand]/1000000;
                         } else if (ga.num_board_cards == 3) {
                                 strength = (double) driver.postFlopStrengthAnalysis(game, cur_hand, board);
                         } else if (ga.num_board_cards == 4) {
@@ -747,7 +746,7 @@ void Player::run(tcp::iostream &stream) {
                                 } else if (strength < pre_fold_thresh) {
                                         stream << "CHECK\n";
                                 } else {
-                                        double bet_prob = strength / pre_raise_thresh;
+                                        double bet_prob = ((strength-pre_fold_thresh) / pre_raise_thresh);
                                         if (rand_val() > bet_prob) {
                                                 stream << "CHECK\n";
                                         } else {
@@ -798,7 +797,7 @@ void Player::run(tcp::iostream &stream) {
                                         if (!raise_max(stream, &ga))
                                                 stream << "CALL\n";
                                 } else {
-                                        double bet_prob = strength / pre_raise_thresh;
+                                        double bet_prob = (strength-pre_fold_thresh) / pre_raise_thresh;
                                         if (ga.last_actions[ga.num_last_actions-1].t == BET || rand_val() > bet_prob) {
                                                 stream << "CALL\n";
                                         } else {

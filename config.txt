@@ -25,6 +25,13 @@ PLAYER_1_PATH = src
 PLAYER_1_NAME = kkz
 PLAYER_1_RESET_KEYS = false
 
+# PLAYER_2_TYPE = FOLDER
+# PLAYER_2_PATH = src2
+# # PLAYER_2_SCONS_ARGS =
+# PLAYER_2_NAME = dup
+# PLAYER_2_RESET_KEYS = false
+
+
 # SOCKET: Engine will wait for bot to connect to a designed socket.
 # PLAYER_1_TYPE = SOCKET
 # PLAYER_1_NAME = kkz
