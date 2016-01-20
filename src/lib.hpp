@@ -337,4 +337,9 @@ handover parse_handover(vector<StringRef> splits) {
         return ho;
 }
 
+double rand_val() {
+        srand(time(NULL));
+        return ((double) rand() / (RAND_MAX));
+}
+
 #endif  // __LIB_HPP__

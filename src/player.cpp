@@ -40,7 +40,7 @@ public:
     //hand using PokerHandEvaluator.
         clock_t begin = clock();
         string outString = "pout.txt";
-        ofstream pout(outString.c_str());
+        //ofstream pout(outString.c_str());
 
         int strength = 0;
         int avgStrength = 0;
@@ -233,25 +233,25 @@ public:
             localEmptySuit2 = -1;
 
         }
-        pout<<"Hand: ";
+        //pout<<"Hand: ";
         for (int i =0; i < 4; i++)
         {
-            pout<<hand[i]<<' ';
+            //pout<<hand[i]<<' ';
         }
-        pout<<'\n';
-        pout <<"Turn cards: ";
+        //pout<<'\n';
+        //pout <<"Turn cards: ";
         for (int i = 0; i < turnCounter; i++)
         {
-            pout<<turnCards[i]<<' ';
+            //pout<<turnCards[i]<<' ';
         }
-       pout <<"River cards: ";
+       //pout <<"River cards: ";
         for (int i = 0; i < riverCounter; i++)
         {
-            pout<<riverCards[i]<<' ';
+            //pout<<riverCards[i]<<' ';
         }
-        pout<<riverCounter<<'\n';
+        //pout<<riverCounter<<'\n';
 
-        pout<<'\n';
+        //pout<<'\n';
 
         std::string result,showdown,highCard;
         std::string delimiter1 = ":";
@@ -269,23 +269,23 @@ public:
                 if(j < riverCounter && riverCards[j] != turnCards[i])  // make sure we are only doing river cards that are up to the turn card and that the turn and river cards are not the same card
                 {
                     newBoard = board + turnCards[i] + riverCards[j];
-                    pout<<newBoard<<'\n';
+                    //pout<<newBoard<<'\n';
                     EvalDriver trial(game, hand, newBoard);
-                    pout<<turnCards[i]<<riverCards[j]<<'\n';
-                    pout<<newBoard<<'\n';
+                    //pout<<turnCards[i]<<riverCards[j]<<'\n';
+                    //pout<<newBoard<<'\n';
                     trial.evaluate();      //creates a private variable _result that is of type PokerHandEvaluation. catgeorize this as a poker hand that is used to calculate strength
                     result = trial.str();
                     showdown = result.substr(0,result.find(delimiter1));
                     highCard = result.substr(15,1);
 
-                    pout<<"Showdown: "<<showdown<<'\n';
-                    pout<<"highCard: "<<highCard<<'\n';
+                    //pout<<"Showdown: "<<showdown<<'\n';
+                    //pout<<"highCard: "<<highCard<<'\n';
                     handI = 0;
                     while (showdown != possibleHands[handI]) {handI++;}
                     highCardI = 12;
                     while (highCard != possibleCards[highCardI]) {highCardI--;}
-                    pout<<"showdownI: "<<handI<<'\n';
-                    pout<<"highCardI: "<<highCardI<<'\n';
+                    //pout<<"showdownI: "<<handI<<'\n';
+                    //pout<<"highCardI: "<<highCardI<<'\n';
 
                     //determine the degeneracy
                     if(riverCardNum[j] == turnCardNum[i])
@@ -296,9 +296,9 @@ public:
                     {
                         degeneracy = (4-handNumsCount[i]-boardNumsCount[i])*(4-handNumsCount[j]-boardNumsCount[j]);
                     }
-                    pout<<"Degeneracy: "<<degeneracy<<'\n';
+                    //pout<<"Degeneracy: "<<degeneracy<<'\n';
                     avgStrength += degeneracy*(handI*13 + highCardI);         //roughly 13 of each set (straights are the exception) when only considering the high card. This just gives us a jump between trips and straights
-                    pout<<"Hand strength: "<< degeneracy*(handI*13 + highCardI) <<'\n';
+                    //pout<<"Hand strength: "<< degeneracy*(handI*13 + highCardI) <<'\n';
 
                     if(handI > 3) //we have a 5 carder at least
                     {
@@ -308,14 +308,14 @@ public:
                 }
             }
         }
-        pout<< "DegeneracyCount: "<<degeneracyCount <<'\n';
+        //pout<< "DegeneracyCount: "<<degeneracyCount <<'\n';
         strength  = avgStrength/combos;        //the average strength is a scale from 0 to 103 that tells you the average outcome of your current hand*/
-        pout<<"Total strength: "<< strength <<'\n';
+        //pout<<"Total strength: "<< strength <<'\n';
         fiveCardHand = fiveCardHand/combos;
-        pout<<"High Hand strength: "<< fiveCardHand <<'\n';
+        //pout<<"High Hand strength: "<< fiveCardHand <<'\n';
         clock_t end = clock();
-        pout << "Time Elapsed: "<< double(end-begin) / CLOCKS_PER_SEC;
-        pout.close();
+        //pout << "Time Elapsed: "<< double(end-begin) / CLOCKS_PER_SEC;
+        //pout.close();
 
         return strength;
     }
@@ -326,7 +326,7 @@ public:
     //hand using PokerHandEvaluator.
         clock_t begin = clock();
         string outString = "pout.txt";
-        ofstream pout(outString.c_str());
+        //ofstream pout(outString.c_str());
 
         int strength = 0;
         int avgStrength = 0;
@@ -482,17 +482,17 @@ public:
             }
             localEmptySuit1 = -1;
         }
-        pout<<"Hand: ";
+        //pout<<"Hand: ";
         for (int i =0; i < 4; i++)
         {
-            pout<<hand[i]<<' ';
+            //pout<<hand[i]<<' ';
         }
-        pout <<"River cards: ";
+        //pout <<"River cards: ";
         for (int i = 0; i < riverCounter; i++)
         {
-            pout<<riverCards[i]<<' ';
+            //pout<<riverCards[i]<<' ';
         }
-        pout<<'\n';
+        //pout<<'\n';
 
         std::string result,showdown,highCard;
         std::string delimiter1 = ":";
@@ -507,29 +507,29 @@ public:
             newBoard = board + riverCards[i];
             EvalDriver trial(game, hand, newBoard);
 
-            pout<<riverCards[i]<<'\n';
-            pout<<newBoard<<'\n';
-        }
-            /*trial.evaluate();      //creates a private variable _result that is of type PokerHandEvaluation. catgeorize this as a poker hand that is used to calculate strength
+            //pout<<riverCards[i]<<'\n';
+            // std::cout<<newBoard<<'\n';
+            // std::cout << riverCards[i] << '\n';
+            trial.evaluate();      //creates a private variable _result that is of type PokerHandEvaluation. catgeorize this as a poker hand that is used to calculate strength
             result = trial.str();
             showdown = result.substr(0,result.find(delimiter1));
             highCard = result.substr(15,1);
 
-            pout<<"Showdown: "<<showdown<<'\n';
-            pout<<"highCard: "<<highCard<<'\n';
+            //pout<<"Showdown: "<<showdown<<'\n';
+            //pout<<"highCard: "<<highCard<<'\n';
             handI = 0;
             while (showdown != possibleHands[handI]) {handI++;}
             highCardI = 12;
             while (highCard != possibleCards[highCardI]) {highCardI--;}
-            pout<<"showdownI: "<<handI<<'\n';
-            pout<<"highCardI: "<<highCardI<<'\n';
+            //pout<<"showdownI: "<<handI<<'\n';
+            //pout<<"highCardI: "<<highCardI<<'\n';
 
             //determine the degeneracy
             degeneracy = (4-handNumsCount[i]-boardNumsCount[i]);
 
-            pout<<"Degeneracy: "<<degeneracy<<'\n';
+            //pout<<"Degeneracy: "<<degeneracy<<'\n';
             avgStrength += degeneracy*(handI*13 + highCardI);         //roughly 13 of each set (straights are the exception) when only considering the high card. This just gives us a jump between trips and straights
-            pout<<"Hand strength: "<< degeneracy*(handI*13 + highCardI) <<'\n';
+            //pout<<"Hand strength: "<< degeneracy*(handI*13 + highCardI) <<'\n';
 
             if(handI > 3) //we have a 5 carder at least
             {
@@ -537,17 +537,53 @@ public:
             }
             degeneracyCount += degeneracy;
         }
-        pout<< "DegeneracyCount: "<<degeneracyCount <<'\n';
-        strength  = avgStrength/combos;        //the average strength is a scale from 0 to 103 that tells you the average outcome of your current hand
-        pout<<"Total strength: "<< strength <<'\n';
+        strength = avgStrength/combos;        //the average strength is a scale from 0 to 103 that tells you the average outcome of your current hand
         fiveCardHand = fiveCardHand/combos;
-        pout<<"High Hand strength: "<< fiveCardHand <<'\n';*/
         clock_t end = clock();
-        pout << "Time Elapsed: "<< double(end-begin) / CLOCKS_PER_SEC;
-        pout.close();
 
         return strength;
     }
+
+    int postRiverStrengthAnalysis(const string& game, const vector<string>& hand, const string& board)  //Only for the flop. Not for the turn/river
+    {//this method determines the game ending hands you possess based on your hand and partial board information
+    //This is accomplished by filling in the rest of the board with all possible cards and evaluating the showdown
+    //hand using PokerHandEvaluator.
+        clock_t begin = clock();
+        string outString = "pout.txt";
+        //ofstream pout(outString.c_str());
+
+        int strength = 0;
+        int avgStrength = 0;
+
+        vector<std::string> possibleCards = {"2","3","4","5","6","7","8","9","T","J","Q","K","A"}; //length  = 13.
+        vector<std::string> possibleSuits = {"c","d","h","s"};
+        vector<std::string> possibleHands = {"high card","one pair","two pair","trips","straight","flush","full house","quads","str8 flush"};
+
+        std::string result,showdown,highCard;
+        std::string delimiter1 = ":";
+
+        int handI = 0;
+        int highCardI = 12;
+        EvalDriver trial(game, hand, board);
+
+        trial.evaluate();      //creates a private variable _result that is of type PokerHandEvaluation. catgeorize this as a poker hand that is used to calculate strength
+        result = trial.str();
+        showdown = result.substr(0,result.find(delimiter1));
+        highCard = result.substr(15,1);
+
+        //pout<<"Showdown: "<<showdown<<'\n';
+        //pout<<"highCard: "<<highCard<<'\n';
+        handI = 0;
+        while (showdown != possibleHands[handI]) {handI++;}
+        highCardI = 12;
+        while (highCard != possibleCards[highCardI]) {highCardI--;}
+        //pout<<"showdownI: "<<handI<<'\n';
+        //pout<<"highCardI: "<<highCardI<<'\n';
+        strength = (handI*13 + highCardI);        //the average strength is a scale from 0 to 103 that tells you the average outcome of your current hand
+        //pout.close();
+        return strength;
+    }
+
 
     string str() const {
         string ret;
@@ -568,6 +604,50 @@ Player::Player() {
 
 std::map<std::string, int> preflop;
 
+double pre_fold_thresh = 0.04;
+double pre_raise_thresh = 0.14;
+
+double flop_avg = 43;
+double flop_dev = 11;
+
+void raise(tcp::iostream &stream, int val) {
+        stream << "RAISE:" << val << "\n";
+}
+
+int raise_max(tcp::iostream &stream, getaction *ga) {
+        int max = -1;
+        for (int i = 0; i < ga->num_legal_actions; i++) {
+                if (ga->legal_actions[i].t == L_RAISE) {
+                        max = ga->legal_actions[i].max;
+                }
+        }
+        if (max != -1) {
+                raise(stream, max);
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
+void bet(tcp::iostream &stream, int val) {
+        stream << "BET:" << val << "\n";
+}
+
+int bet_max(tcp::iostream &stream, getaction *ga) {
+        int max = -1;
+        for (int i = 0; i < ga->num_legal_actions; i++) {
+                if (ga->legal_actions[i].t == L_BET) {
+                        max = ga->legal_actions[i].max;
+                }
+        }
+        if (max != -1) {
+                bet(stream, max);
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
 /**
  * Simple example pokerbot, written in C++.
  *
@@ -579,6 +659,8 @@ std::map<std::string, int> preflop;
 void Player::run(tcp::iostream &stream) {
         std::string line;
         vector<std::string> cur_hand;   //each string in vector is a card in the hole
+        bool button;
+        bool pre;
         std::string game("O");
         while (std::getline(stream, line)) {
                 // For now, just print out whatever date is read in.
@@ -587,42 +669,174 @@ void Player::run(tcp::iostream &stream) {
 
                 if (strncmp("NEWGAME", splits[0].begin(), 7) == 0) {
                         newgame ng = parse_newgame(splits);
+                        pre = true;
                 } else if (strncmp("NEWHAND", splits[0].begin(), 7) == 0) {
                         newhand nh = parse_newhand(splits);
                         cur_hand = nh.holecards;
                         std::sort(cur_hand.begin(), cur_hand.end());
+                        button = nh.button;
                 } else if (strncmp("GETACTION", splits[0].begin(), 9) == 0) {
                         getaction ga = parse_getaction(splits);
+
+                        pre = ga.num_board_cards == 0;
 
                         std::string board = "";
                         for (int i = 0; i < ga.num_board_cards; i++)
                                 board += ga.board_cards[i];
-                        //std::string board = "5s5h5d";
 
-                        std::cout << "HAND:";
                         std::string hand = "";
                         for (int i = 0; i < 4; i++) {
-                                std::cout << cur_hand[i];
                                 hand += cur_hand[i];
                         }
-                        std::cout << "\nBOARD:";
-                        std::cout << board << "\n";
 
-                        int strength;
+                        performedaction last_action = ga.last_actions[ga.num_last_actions-1];
+
                         EvalDriver driver(game, cur_hand, board);
+                        double strength;
                         if (ga.num_board_cards == 0) {
-                                strength = preflop[hand];
+                                strength = (double) preflop[hand]/10000;
                         } else if (ga.num_board_cards == 3) {
-                                //currently ~= 44 for a hand with full house opportunities;
-                                //          ~= 58 for full house + flushes; Weak hand ~= 25
-                                strength = driver.postFlopStrengthAnalysis(game, cur_hand, board);
+                                strength = (double) driver.postFlopStrengthAnalysis(game, cur_hand, board);
                         } else if (ga.num_board_cards == 4) {
-                                //strength = driver.postTurnStrengthAnalysis(game, cur_hand, board);
+                                strength = (double) driver.postTurnStrengthAnalysis(game, cur_hand, board);
                         } else if (ga.num_board_cards == 5) {
-                                // here we need to brute force other's hand
+                                strength = (double) driver.postRiverStrengthAnalysis(game, cur_hand, board);
                         }
-                        std::cout << "STRENGTH:" << strength << "\n";
-                        stream << "CALL\n";
+                        if (last_action.t == BET) {
+                                if (ga.num_board_cards >= 3) { //flop + turn + river
+                                        if (button) { //second
+                                                if (strength < flop_avg - 1.5*flop_dev) {
+                                                        stream << "FOLD\n";
+                                                } else if (strength > flop_avg + flop_dev) {
+                                                        if (rand_val() > .5) {
+                                                                if (!raise_max(stream, &ga))
+                                                                        stream << "CALL\n";
+                                                        } else {
+                                                                stream << "CALL\n";
+                                                        }
+                                                } else {
+                                                        if (rand_val() < (strength/(flop_avg + 1.5*flop_dev))) {
+                                                                stream << "CALL\n";
+                                                        } else {
+                                                                stream << "FOLD\n";
+                                                        }
+                                                }
+                                        } else { //first
+                                                if (strength < flop_avg - 1.5*flop_dev) {
+                                                        stream << "FOLD\n";
+                                                } else if (strength > flop_avg + 1.5*flop_dev) {
+                                                        if (rand_val() > .5) {
+                                                                if (!raise_max(stream, &ga))
+                                                                        stream << "CALL\n";
+                                                        } else {
+                                                                stream << "CALL\n";
+                                                        }
+                                                } else {
+                                                        if (rand_val() < (strength/(flop_avg + 1.5*flop_dev))) {
+                                                                stream << "CALL\n";
+                                                        } else {
+                                                                stream << "FOLD\n";
+                                                        }
+                                                }
+                                        }
+                                }
+                        } else if (last_action.t == CALL) { // if (pre && !button)
+                                if (strength > pre_raise_thresh) {
+                                        if (!bet_max(stream, &ga))
+                                                stream << "CALL\n";
+                                } else if (strength < pre_fold_thresh) {
+                                        stream << "CHECK\n";
+                                } else {
+                                        double bet_prob = strength / pre_raise_thresh;
+                                        if (rand_val() > bet_prob) {
+                                                stream << "CHECK\n";
+                                        } else {
+                                                if (!bet_max(stream, &ga))
+                                                        stream << "CALL\n";
+                                        }
+                                }
+                        } else if (last_action.t == CHECK) {
+                                if (ga.num_board_cards >= 3) { //flop, turn, river
+                                        if (strength > flop_avg + 1.5*flop_dev) {
+                                                if (!bet_max(stream, &ga))
+                                                        stream << "CALL\n";
+                                        } else if (strength < flop_avg - 1.5*flop_dev) {
+                                                stream << "CHECK\n";
+                                        } else {
+                                                if (rand_val() > (strength/(flop_avg+1.5*flop_dev))) {
+                                                        stream << "CHECK\n";
+                                                } else {
+                                                        if (!bet_max(stream, &ga))
+                                                                stream << "CALL\n";
+                                                }
+                                        }
+                                }
+                        } else if (last_action.t == DEAL) {
+                                if (ga.num_board_cards >= 3) { //flop, turn, river
+                                        if (strength > flop_avg + 1.5*flop_dev) {
+                                                if (rand_val() < (strength-flop_avg)/600) {
+                                                        if (!bet_max(stream, &ga))
+                                                                stream << "CALL\n";
+                                                } else {
+                                                        stream << "CHECK\n";
+                                                }
+                                        } else if (strength < flop_avg - 1.5*flop_dev) {
+                                                stream << "CHECK\n";
+                                        } else {
+                                                if (rand_val() < 0.015) {
+                                                        if (!bet_max(stream, &ga))
+                                                                stream << "CALL\n";
+                                                } else {
+                                                        stream << "CHECK\n";
+                                                }
+                                        }
+                                }
+                        } else if (last_action.t == POST) { // if (pre && button)
+                                if (strength < pre_fold_thresh) {
+                                        stream << "FOLD\n";
+                                } else if (strength > pre_raise_thresh) {
+                                        if (!raise_max(stream, &ga))
+                                                stream << "CALL\n";
+                                } else {
+                                        double bet_prob = strength / pre_raise_thresh;
+                                        if (ga.last_actions[ga.num_last_actions-1].t == BET || rand_val() > bet_prob) {
+                                                stream << "CALL\n";
+                                        } else {
+                                                if (!raise_max(stream, &ga))
+                                                        stream << "CALL\n";
+                                        }
+                                }
+                        } else if (last_action.t == RAISE) {
+                                if (pre) {
+                                        if (strength > pre_raise_thresh) {
+                                                if (rand_val() > .5) {
+                                                        if (!raise_max(stream, &ga))
+                                                                stream << "CALL\n";
+                                                } else {
+                                                        stream << "CALL\n";
+                                                }
+                                        } else {
+                                                stream << "CALL\n";
+                                        }
+                                } else {
+                                        if (strength > flop_avg + 1.5*flop_dev) {
+                                                if (rand_val() > .5) {
+                                                        if (!raise_max(stream, &ga))
+                                                                stream << "CALL\n";
+                                                } else {
+                                                        stream << "CALL\n";
+                                                }
+                                        } else {
+                                                if (rand_val() < (strength/(flop_avg + 1.5*flop_dev))) {
+                                                        stream << "CALL\n";
+                                                } else {
+                                                        stream << "FOLD\n";
+                                                }
+                                        }
+                                }
+                        } else {
+                                stream << "CALL\n";
+                        }
                 } else if (strncmp("HANDOVER", splits[0].begin(), 8) == 0) {
                         handover ho = parse_handover(splits);
                 } else if (strncmp("REQUESTKEYVALUES", splits[0].begin(), 16) == 0) {
