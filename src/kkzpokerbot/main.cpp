@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   }
 
   // Read the preflop analysis database
-  std::ifstream rawdata("preflop.data");
+  std::ifstream rawdata("kkzpokerbot/preflop.data");
   std::string key;
   int value;
   while (rawdata >> key >> value)
@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
   // Pass stream to player, let player take it from here.
   Player player;
   player.run(stream);
+  std::cout << "Main finish.\n";
 
   return 0;
 

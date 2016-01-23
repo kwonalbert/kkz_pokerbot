@@ -15,8 +15,6 @@ using namespace std;
 namespace po = boost::program_options;
 using namespace pokerstove;
 
-
-
 class EvalDriver {
 public:
     EvalDriver(const string& game,
@@ -693,7 +691,7 @@ void Player::run(tcp::iostream &stream) {
                         EvalDriver driver(game, cur_hand, board);
                         double strength;
                         if (ga.num_board_cards == 0) {
-                                strength = (double) preflop[hand]/1000000;
+                                strength = ((double) preflop[hand])/1000000;
                         } else if (ga.num_board_cards == 3) {
                                 strength = (double) driver.postFlopStrengthAnalysis(game, cur_hand, board);
                         } else if (ga.num_board_cards == 4) {
@@ -798,7 +796,7 @@ void Player::run(tcp::iostream &stream) {
                                                 stream << "CALL\n";
                                 } else {
                                         double bet_prob = (strength-pre_fold_thresh) / pre_raise_thresh;
-                                        if (ga.last_actions[ga.num_last_actions-1].t == BET || rand_val() > bet_prob) {
+                                        if (rand_val() > bet_prob) {
                                                 stream << "CALL\n";
                                         } else {
                                                 if (!raise_max(stream, &ga))

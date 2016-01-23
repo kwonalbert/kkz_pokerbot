@@ -1,0 +1,14 @@
+import os
+# On Windows, the path is incorrect, so change the path to
+# the environment one. Even though windows is the problem,
+# do it for all platforms
+
+newpath=os.environ.get('PATH')
+env = Environment(ENV = { 'PATH' : newpath }, CCFLAGS='-std=c++11 -Ikkzpokerbot -Ikkzpokerbot/pokerstove')
+
+peval_srcs = ['pokerstove/peval/Card.cpp', 'pokerstove/peval/CardSet.cpp',
+              'pokerstove/peval/PokerEvaluation.cpp', 'pokerstove/peval/PokerHand.cpp',
+              'pokerstove/peval/PokerHandEvaluator_Alloc.cpp', 'pokerstove/peval/PokerHandEvaluator.cpp',
+              'pokerstove/peval/Rank.cpp', 'pokerstove/peval/Suit.cpp']
+
+env.Library('peval', peval_srcs)

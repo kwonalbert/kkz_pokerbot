@@ -2,15 +2,9 @@ import os
 # On Windows, the path is incorrect, so change the path to
 # the environment one. Even though windows is the problem,
 # do it for all platforms
-
+#SConscript('kkzpokerbot/SConscript')
 newpath=os.environ.get('PATH')
-env = Environment(ENV = { 'PATH' : newpath }, CCFLAGS='-O3 -std=c++11 -Ikkzpokerbot -Ikkzpokerbot/pokerstove')
-
-peval_srcs = ['kkzpokerbot/pokerstove/peval/Card.cpp', 'kkzpokerbot/pokerstove/peval/CardSet.cpp', 'kkzpokerbot/pokerstove/peval/CardSetGenerators.cpp',
-              'kkzpokerbot/pokerstove/peval/PokerEvaluation.cpp', 'kkzpokerbot/pokerstove/peval/PokerHand.cpp',
-              'kkzpokerbot/pokerstove/peval/PokerHandEvaluator_Alloc.cpp', 'kkzpokerbot/pokerstove/peval/PokerHandEvaluator.cpp',
-              'kkzpokerbot/pokerstove/peval/Rank.cpp', 'kkzpokerbot/pokerstove/peval/Suit.cpp']
+env = Environment(ENV = { 'PATH' : newpath }, CCFLAGS='-std=c++11 -Ikkzpokerbot -Ikkzpokerbot/pokerstove')
 
 libs = ['boost_program_options', 'boost_system', 'pthread']
-env.Library('peval', peval_srcs)
-env.Program('player', ['kkzpokerbot/main.cpp', 'kkzpokerbot/player.cpp', 'libpeval.a'], LIBS=libs)
+env.Program('player', ['kkzpokerbot/main.cpp', 'kkzpokerbot/player.cpp', 'kkzpokerbot/libpeval.a'], LIBS=libs)

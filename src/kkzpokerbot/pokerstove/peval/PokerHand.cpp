@@ -281,4 +281,3 @@ vector<Card> PokerHand::cards() const
         out.push_back(_cards[i]);
     return out;
 }
-
