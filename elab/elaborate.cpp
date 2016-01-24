@@ -17,8 +17,7 @@ using namespace std;
 namespace po = boost::program_options;
 using namespace pokerstove;
 
-double rand_val(int max) {
-        srand(time(NULL));
+int rand_val(int max) {
         return rand() % max;
 }
 
@@ -613,6 +612,8 @@ vector<std::string> all_cards = {
 
 //elaborate all boards
 int main(int argc, char *argv[]) {
+        srand(time(NULL));
+
         ofstream flop_avgs, flop_devs;
         ofstream turn_avgs, turn_devs;
         ofstream river_avgs, river_devs;;
@@ -659,21 +660,21 @@ int main(int argc, char *argv[]) {
                                 avail_hands.erase(std::remove(avail_hands.begin(), avail_hands.end(), r), avail_hands.end());
                                 int river_num = 0;
 
-                                vector<vector<string>> all_hands;
-                                for (auto&& h : combinations(avail_hands, 4)) {
-                                        vector<string> hand;
-                                        for (auto&& i : h) {
-                                                hand.push_back(i);
-                                        }
-                                        all_hands.push_back(hand);
+                                auto all_hands = combinations(avail_hands, 4);
+                                vector<int> samples;
+                                for (int i = 0; i < 2; i++) {
+                                        samples.push_back(rand_val(178365));
                                 }
 
-                                vector<int> samples;
-                                for (int i = 0; i < 2; i++)
-                                        samples.push_back(rand_val(178365));
-
                                 for (int i = 0; i < samples.size(); i++) {
-                                        vector<string> hand = all_hands[i];
+                                        auto h = all_hands.begin();
+                                        advance(h, samples[i]);
+
+                                        vector<string> hand;
+                                        for (auto i : *h) {
+                                                hand.push_back(i);
+                                        }
+
                                         EvalDriver driver("O", hand, board);
                                         double strength = (double) driver.postRiverStrengthAnalysis("O", hand, board);
 
@@ -711,7 +712,6 @@ int main(int argc, char *argv[]) {
                 for (int i = 0; i < flop_strs.size(); i++)
                         flop_dev_sum += flop_strs[i];
                 flop_devs << board << ' ' << sqrt(flop_dev_sum/(flop_strs.size()-1)) << '\n';
-
                 std::cout << board << '\n';
         }
 
