@@ -600,13 +600,16 @@ private:
 Player::Player() {
 }
 
-std::map<std::string, int> preflop;
+std::map<std::string, double> preflop_strs;
+std::map<std::string, double> flop_avgs;
+std::map<std::string, double> flop_devs;
+std::map<std::string, double> turn_avgs;
+std::map<std::string, double> turn_devs;
+std::map<std::string, double> river_avgs;
+std::map<std::string, double> river_devs;
 
 double pre_fold_thresh = 0.065;
 double pre_raise_thresh = 0.14;
-
-double flop_avg = 43;
-double flop_dev = 11;
 
 void raise(tcp::iostream &stream, int val) {
         stream << "RAISE:" << val << "\n";
@@ -655,20 +658,52 @@ int bet_max(tcp::iostream &stream, getaction *ga) {
  * example of how a pokerbot should communicate with the engine.
  */
 void Player::run(tcp::iostream &stream) {
+        // Read the preflop analysis database
+        std::ifstream rawdata("kkzpokerbot/preflop.data");
+        std::string key;
+        double value;
+        while (rawdata >> key >> value)
+                preflop_strs[key] = value;
+
+        std::ifstream rawdata1("kkzpokerbot/flop_avgs.data");
+        while (rawdata1 >> key >> value)
+                flop_avgs[key] = value;
+
+        std::ifstream rawdata2("kkzpokerbot/flop_devs.data");
+        while (rawdata2 >> key >> value)
+                flop_devs[key] = value;
+
+        std::ifstream rawdata3("kkzpokerbot/turn_avgs.data");
+        while (rawdata3 >> key >> value)
+                turn_avgs[key] = value;
+
+        std::ifstream rawdata4("kkzpokerbot/turn_devs.data");
+        while (rawdata4 >> key >> value)
+                turn_devs[key] = value;
+
+        std::ifstream rawdata5("kkzpokerbot/river_avgs.data");
+        while (rawdata5 >> key >> value)
+                river_avgs[key] = value;
+
+        std::ifstream rawdata6("kkzpokerbot/river_devs.data");
+        while (rawdata6 >> key >> value)
+                river_devs[key] = value;
+
         std::string line;
         vector<std::string> cur_hand;   //each string in vector is a card in the hole
         bool button;
         bool pre;
         std::string game("O");
+        int hand_num = 0;
         while (std::getline(stream, line)) {
                 // For now, just print out whatever date is read in.
-                std::cout << line << "\n";
                 vector<StringRef> splits = split(line);
 
                 if (strncmp("NEWGAME", splits[0].begin(), 7) == 0) {
                         newgame ng = parse_newgame(splits);
                 } else if (strncmp("NEWHAND", splits[0].begin(), 7) == 0) {
                         newhand nh = parse_newhand(splits);
+                        hand_num++;
                         cur_hand = nh.holecards;
                         std::sort(cur_hand.begin(), cur_hand.end());
                         button = nh.button;
@@ -677,6 +712,7 @@ void Player::run(tcp::iostream &stream) {
 
                         pre = ga.num_board_cards == 0;
 
+                        std::sort(ga.board_cards.begin(), ga.board_cards.end());
                         std::string board = "";
                         for (int i = 0; i < ga.num_board_cards; i++)
                                 board += ga.board_cards[i];
@@ -691,7 +727,7 @@ void Player::run(tcp::iostream &stream) {
                         EvalDriver driver(game, cur_hand, board);
                         double strength;
                         if (ga.num_board_cards == 0) {
-                                strength = ((double) preflop[hand])/1000000;
+                                strength = ((double) preflop_strs[hand])/1000000;
                         } else if (ga.num_board_cards == 3) {
                                 strength = (double) driver.postFlopStrengthAnalysis(game, cur_hand, board);
                         } else if (ga.num_board_cards == 4) {
@@ -701,10 +737,24 @@ void Player::run(tcp::iostream &stream) {
                         }
                         if (last_action.t == BET) {
                                 if (ga.num_board_cards >= 3) { //flop + turn + river
+                                        double avg;
+                                        double dev;
+                                        if (ga.num_board_cards == 3) {
+                                                avg = flop_avgs[board];
+                                                dev = flop_devs[board];
+                                        } else if (ga.num_board_cards == 4) {
+                                                avg = turn_avgs[board];
+                                                dev = turn_devs[board];
+                                        } else {
+                                                avg = river_avgs[board];
+                                                dev = river_devs[board];
+                                        }
+                                        //cout << ga.num_board_cards << ':' << avg << ':' << dev << '\n';
+
                                         if (button) { //second
-                                                if (strength < flop_avg - 1.5*flop_dev) {
+                                                if (strength < avg - 1.8*dev) {
                                                         stream << "FOLD\n";
-                                                } else if (strength > flop_avg + flop_dev) {
+                                                } else if (strength > avg + 2.0*dev) {
                                                         if (rand_val() > .5) {
                                                                 if (!raise_max(stream, &ga))
                                                                         stream << "CALL\n";
@@ -712,16 +762,16 @@ void Player::run(tcp::iostream &stream) {
                                                                 stream << "CALL\n";
                                                         }
                                                 } else {
-                                                        if (rand_val() < (strength/(flop_avg + 1.5*flop_dev))) {
+                                                        if (rand_val() < ((strength-(avg-1.8*dev))/(avg + 2*dev))) {
                                                                 stream << "CALL\n";
                                                         } else {
                                                                 stream << "FOLD\n";
                                                         }
                                                 }
                                         } else { //first
-                                                if (strength < flop_avg - 1.5*flop_dev) {
+                                                if (strength < avg - 1.8*dev) {
                                                         stream << "FOLD\n";
-                                                } else if (strength > flop_avg + 1.5*flop_dev) {
+                                                } else if (strength > avg + 3.0*dev) {
                                                         if (rand_val() > .5) {
                                                                 if (!raise_max(stream, &ga))
                                                                         stream << "CALL\n";
@@ -729,7 +779,7 @@ void Player::run(tcp::iostream &stream) {
                                                                 stream << "CALL\n";
                                                         }
                                                 } else {
-                                                        if (rand_val() < (strength/(flop_avg + 1.5*flop_dev))) {
+                                                        if (rand_val() < ((strength-(avg-1.8*dev))/(avg + 3.0*dev))) {
                                                                 stream << "CALL\n";
                                                         } else {
                                                                 stream << "FOLD\n";
@@ -754,13 +804,28 @@ void Player::run(tcp::iostream &stream) {
                                 }
                         } else if (last_action.t == CHECK) {
                                 if (ga.num_board_cards >= 3) { //flop, turn, river
-                                        if (strength > flop_avg + 1.5*flop_dev) {
+                                        double avg;
+                                        double dev;
+                                        if (ga.num_board_cards == 3) {
+                                                avg = flop_avgs[board];
+                                                dev = flop_devs[board];
+                                        } else if (ga.num_board_cards == 4) {
+                                                avg = turn_avgs[board];
+                                                dev = turn_devs[board];
+                                        } else {
+                                                avg = river_avgs[board];
+                                                dev = river_devs[board];
+                                        }
+                                        if (ga.num_board_cards == 5)
+                                                cout << hand_num << ':' << strength << ':' << avg << ':' << dev << '\n';
+
+                                        if (strength > avg + 3.0*dev) {
                                                 if (!bet_max(stream, &ga))
                                                         stream << "CALL\n";
-                                        } else if (strength < flop_avg - 1.5*flop_dev) {
+                                        } else if (strength < avg - 1.8*dev) {
                                                 stream << "CHECK\n";
                                         } else {
-                                                if (rand_val() > (strength/(flop_avg+1.5*flop_dev))) {
+                                                if (rand_val() > ((strength-(avg - 1.8*dev))/(avg + 3.0*dev))) {
                                                         stream << "CHECK\n";
                                                 } else {
                                                         if (!bet_max(stream, &ga))
@@ -770,16 +835,31 @@ void Player::run(tcp::iostream &stream) {
                                 }
                         } else if (last_action.t == DEAL) {
                                 if (ga.num_board_cards >= 3) { //flop, turn, river
-                                        if (strength > flop_avg + 1.5*flop_dev) {
-                                                if (rand_val() < (strength-flop_avg)/600) {
+                                        double avg;
+                                        double dev;
+                                        if (ga.num_board_cards == 3) {
+                                                avg = flop_avgs[board];
+                                                dev = flop_devs[board];
+                                        } else if (ga.num_board_cards == 4) {
+                                                avg = turn_avgs[board];
+                                                dev = turn_devs[board];
+                                        } else {
+                                                avg = river_avgs[board];
+                                                dev = river_devs[board];
+                                        }
+                                        //cout << ga.num_board_cards << ':' << avg << ':' << dev << '\n';
+
+                                        if (strength > avg + 3.0*dev) {
+                                                if (rand_val() < (strength-avg)/600) {
                                                         if (!bet_max(stream, &ga))
                                                                 stream << "CALL\n";
                                                 } else {
                                                         stream << "CHECK\n";
                                                 }
-                                        } else if (strength < flop_avg - 1.5*flop_dev) {
+                                        } else if (strength < avg - 1.8*dev) {
                                                 stream << "CHECK\n";
                                         } else {
+                                                //TODO: change for turn and river
                                                 if (rand_val() < 0.015) {
                                                         if (!bet_max(stream, &ga))
                                                                 stream << "CALL\n";
@@ -788,7 +868,7 @@ void Player::run(tcp::iostream &stream) {
                                                 }
                                         }
                                 }
-                        } else if (last_action.t == POST) { // if (pre && button)
+                        } else if (last_action.t == POST) { if (pre && button)
                                 if (strength < pre_fold_thresh) {
                                         stream << "FOLD\n";
                                 } else if (strength > pre_raise_thresh) {
@@ -816,7 +896,21 @@ void Player::run(tcp::iostream &stream) {
                                                 stream << "CALL\n";
                                         }
                                 } else {
-                                        if (strength > flop_avg + 1.5*flop_dev) {
+                                        double avg;
+                                        double dev;
+                                        if (ga.num_board_cards == 3) {
+                                                avg = flop_avgs[board];
+                                                dev = flop_devs[board];
+                                        } else if (ga.num_board_cards == 4) {
+                                                avg = turn_avgs[board];
+                                                dev = turn_devs[board];
+                                        } else {
+                                                avg = river_avgs[board];
+                                                dev = river_devs[board];
+                                        }
+                                        //cout << ga.num_board_cards << ':' << avg << ':' << dev << '\n';
+
+                                        if (strength > avg + 3.0*dev) {
                                                 if (rand_val() > .5) {
                                                         if (!raise_max(stream, &ga))
                                                                 stream << "CALL\n";
@@ -824,7 +918,7 @@ void Player::run(tcp::iostream &stream) {
                                                         stream << "CALL\n";
                                                 }
                                         } else {
-                                                if (rand_val() < (strength/(flop_avg + 1.5*flop_dev))) {
+                                                if (rand_val() < ((strength-(avg-1.8*dev))/(avg + 3.0*dev))) {
                                                         stream << "CALL\n";
                                                 } else {
                                                         stream << "FOLD\n";

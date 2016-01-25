@@ -18,7 +18,7 @@ using namespace std;
 namespace po = boost::program_options;
 using namespace pokerstove;
 
-#define SAMPLE_COUNT 1
+#define SAMPLE_COUNT 400
 
 int rand_val(int max) {
         return rand() % max;
@@ -629,17 +629,146 @@ int main(int argc, char *argv[]) {
         turn_devs.open("turn_devs.data");
         river_devs.open("river_devs.data");
 
-        map<string, int> flop_counts;
         map<string, float> flop_totals;
         map<string, float*> flop_instances;
-        map<string, int> turn_counts;
         map<string, float> turn_totals;
         map<string, float*> turn_instances;
-        map<string, int> river_counts;
         map<string, float> river_totals;
         map<string, float*> river_instances;
 
         clock_t begin = clock();
+        for (auto&& f : combinations(all_cards,3)) {
+                vector<string> board;
+                for (auto&& i : f) {
+                        board.push_back(i);
+                }
+                std::sort(board.begin(), board.end());
+                string flop_str = "";
+                for (int i = 0; i < board.size(); i++)
+                        flop_str += board[i];
+                float *new_arr = (float*) malloc(sizeof(float)*SAMPLE_COUNT);
+                flop_instances[flop_str] = new_arr;
+                flop_totals[flop_str] = 0;
+
+                vector<string> avail_hands = all_cards;
+                for (auto && c : board)
+                        avail_hands.erase(std::remove(avail_hands.begin(), avail_hands.end(), c), avail_hands.end());
+
+                vector<string> turns;
+                vector<string> rivers;
+                vector<vector<string>> all_hands;
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        vector<string> hand;
+                        map<int, bool> seen;
+                        int count = 0;
+                        while (count < 6) {
+                                int idx = rand_val(47);
+                                if (seen.find(idx) != seen.end())
+                                        continue;
+                                seen[idx] = true;
+                                if (count == 0)
+                                        turns.push_back(avail_hands[idx]);
+                                else if (count == 1)
+                                        rivers.push_back(avail_hands[idx]);
+                                else
+                                        hand.push_back(avail_hands[idx]);
+                                count++;
+                        }
+                        all_hands.push_back(hand);
+                }
+
+
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        string board_str = flop_str + turns[i] + rivers[i];
+                        EvalDriver driver("O", all_hands[i], board_str);
+                        float strength = (float) driver.postRiverStrengthAnalysis("O", all_hands[i], board_str);
+
+                        string hand = "";
+                        for (int j = 0; j < 4; j++)
+                                hand += all_hands[i][j];
+                        flop_instances[flop_str][i] = strength;
+                        flop_totals[flop_str] += strength;
+                }
+        }
+        clock_t end = clock();
+        cout << "flop took " << ((float) end - begin)/CLOCKS_PER_SEC << '\n';
+
+        for (const auto& kv : flop_totals) {
+                float avg = kv.second/SAMPLE_COUNT;
+                flop_avgs << kv.first << ' ' << avg << '\n';
+                float *instances = flop_instances[kv.first];
+                float dev_sum = 0;
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        dev_sum += instances[i];
+                }
+                free(instances);
+                flop_devs << kv.first << ' ' << sqrt(dev_sum/(SAMPLE_COUNT-1)) << '\n';
+        }
+
+
+
+        for (auto&& f : combinations(all_cards,4)) {
+                vector<string> board;
+                for (auto&& i : f) {
+                        board.push_back(i);
+                }
+                std::sort(board.begin(), board.end());
+                string turn_str = "";
+                for (int i = 0; i < board.size(); i++)
+                        turn_str += board[i];
+                float *new_arr = (float*) malloc(sizeof(float)*SAMPLE_COUNT);
+                turn_instances[turn_str] = new_arr;
+                turn_totals[turn_str] = 0;
+
+                vector<string> avail_hands = all_cards;
+                for (auto && c : board)
+                        avail_hands.erase(std::remove(avail_hands.begin(), avail_hands.end(), c), avail_hands.end());
+
+                vector<string> rivers;
+                vector<vector<string>> all_hands;
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        vector<string> hand;
+                        map<int, bool> seen;
+                        int count = 0;
+                        while (count < 5) {
+                                int idx = rand_val(47);
+                                if (seen.find(idx) != seen.end())
+                                        continue;
+                                seen[idx] = true;
+                                if (count == 0)
+                                        rivers.push_back(avail_hands[idx]);
+                                else
+                                        hand.push_back(avail_hands[idx]);
+                                count++;
+                        }
+                        all_hands.push_back(hand);
+                }
+
+
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        string board_str = turn_str + rivers[i];
+                        EvalDriver driver("O", all_hands[i], board_str);
+                        float strength = (float) driver.postRiverStrengthAnalysis("O", all_hands[i], board_str);
+
+                        turn_instances[turn_str][i] = strength;
+                        turn_totals[turn_str] += strength;
+                }
+        }
+        end = clock();
+        cout << "turn took " << ((float) end - begin)/CLOCKS_PER_SEC << '\n';
+
+        for (const auto& kv : turn_totals) {
+                float avg = kv.second/SAMPLE_COUNT;
+                turn_avgs << kv.first << ' ' << avg << '\n';
+                float *instances = turn_instances[kv.first];
+                float dev_sum = 0;
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        dev_sum += instances[i];
+                }
+                free(instances);
+                turn_devs << kv.first << ' ' << sqrt(dev_sum/(SAMPLE_COUNT-1)) << '\n';
+        }
+
         for (auto&& f : combinations(all_cards,5)) {
                 vector<string> board;
                 for (auto&& i : f) {
@@ -649,161 +778,52 @@ int main(int argc, char *argv[]) {
                 string board_str = "";
                 for (int i = 0; i < board.size(); i++)
                         board_str += board[i];
-                float *new_arr = (float*) malloc(sizeof(float)*SAMPLE_COUNT*20);
+                float *new_arr = (float*) malloc(sizeof(float)*SAMPLE_COUNT);
                 river_instances[board_str] = new_arr;
-                river_counts[board_str] = 0;
                 river_totals[board_str] = 0;
-        }
-
-        for (auto&& f : combinations(all_cards,4)) {
-                vector<string> board;
-                for (auto&& i : f) {
-                        board.push_back(i);
-                }
-                std::sort(board.begin(), board.end());
-                string board_str = "";
-                for (int i = 0; i < board.size(); i++)
-                        board_str += board[i];
-                float *new_arr = (float*) malloc(sizeof(float)*SAMPLE_COUNT*48*4);
-                turn_instances[board_str] = new_arr;
-                turn_counts[board_str] = 0;
-                turn_totals[board_str] = 0;
-        }
-
-        for (auto&& f : combinations(all_cards,3)) {
-                vector<string> board;
-                for (auto&& i : f) {
-                        board.push_back(i);
-                }
-                std::sort(board.begin(), board.end());
-                string board_str = "";
-                for (int i = 0; i < board.size(); i++)
-                        board_str += board[i];
-                float *new_arr = (float*) malloc(sizeof(float)*SAMPLE_COUNT*49*48);
-                flop_instances[board_str] = new_arr;
-                flop_counts[board_str] = 0;
-                flop_totals[board_str] = 0;
-        }
-
-        clock_t end = clock();
-        std::cout << "initializing took" << ((float)(end-begin))/CLOCKS_PER_SEC << '\n';
-
-        begin = clock();
-        int count = 0;
-        for (auto&& f : combinations(all_cards,3)) { //flop
-                vector<string> avail_turns = all_cards;
-                vector<string> flop;
-                for (auto&& i : f) {
-                        flop.push_back(i);
-                        avail_turns.erase(std::remove(avail_turns.begin(), avail_turns.end(), i), avail_turns.end());
-                }
-                std::sort(flop.begin(), flop.end());
-                string flop_str = "";
-                for (int i = 0; i < flop.size(); i++)
-                        flop_str += flop[i];
-
-                for (auto&& t : avail_turns) {
-                        vector<string> turn = flop;
-                        turn.push_back(t); std::sort(turn.begin(), turn.end());
-                        string turn_str = "";
-                        for (int i = 0; i < turn.size(); i++)
-                                turn_str += turn[i];
-
-                        vector<string> avail_rivers = avail_turns;
-                        avail_rivers.erase(std::remove(avail_rivers.begin(), avail_rivers.end(), t), avail_rivers.end());
 
 
-                        for (auto&& r : avail_rivers) {
-                                vector<string> river = turn;
-                                river.push_back(r); std::sort(river.begin(), river.end());
-                                string river_str = "";
-                                for (int i = 0; i < river.size(); i++)
-                                        river_str += river[i];
+                vector<string> avail_hands = all_cards;
+                for (auto && c : board)
+                        avail_hands.erase(std::remove(avail_hands.begin(), avail_hands.end(), c), avail_hands.end());
 
-                                vector<string> avail_hands = avail_rivers;
-                                avail_hands.erase(std::remove(avail_hands.begin(), avail_hands.end(), r), avail_hands.end());
-
-                                vector<vector<string>> all_hands;
-                                for (int i = 0; i < SAMPLE_COUNT; i++) {
-                                        vector<string> hand;
-                                        map<int, bool> seen;
-                                        int count = 0;
-                                        while (count < 4) {
-                                                int idx = rand_val(47);
-                                                if (seen.find(idx) != seen.end())
-                                                        continue;
-                                                seen[idx] = true;
-                                                hand.push_back(avail_hands[idx]);
-                                                count++;
-                                        }
-                                        all_hands.push_back(hand);
-                                }
-
-                                for (int i = 0; i < SAMPLE_COUNT; i++) {
-                                        EvalDriver driver("O", all_hands[i], river_str);
-                                        float strength = (float) driver.postRiverStrengthAnalysis("O", all_hands[i], river_str);
-
-                                        flop_instances[flop_str][flop_counts[flop_str]] = strength;
-                                        flop_counts[flop_str] += 1;
-                                        flop_totals[flop_str] += strength;
-
-                                        turn_instances[turn_str][turn_counts[turn_str]] = strength;
-                                        turn_counts[turn_str] += 1;
-                                        turn_totals[turn_str] += strength;
-
-                                        river_instances[river_str][river_counts[river_str]] = strength;
-                                        river_counts[river_str] += 1;
-                                        river_totals[river_str] += strength;
-
-                                }
+                vector<vector<string>> all_hands;
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        vector<string> hand;
+                        map<int, bool> seen;
+                        int count = 0;
+                        while (count < 4) {
+                                int idx = rand_val(47);
+                                if (seen.find(idx) != seen.end())
+                                        continue;
+                                seen[idx] = true;
+                                hand.push_back(avail_hands[idx]);
+                                count++;
                         }
+                        all_hands.push_back(hand);
                 }
 
-                if ((count % 5000) == 0) {
-                        clock_t end = clock();
-                        std::cout << count << ':' << ((float)(end-begin))/CLOCKS_PER_SEC << '\n';
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
+                        EvalDriver driver("O", all_hands[i], board_str);
+                        float strength = (float) driver.postRiverStrengthAnalysis("O", all_hands[i], board_str);
+
+                        river_instances[board_str][i] = strength;
+                        river_totals[board_str] += strength;
                 }
-                count++;
         }
-
-
-        for (const auto& kv : flop_totals) {
-                float count = flop_counts[kv.first];
-                float avg = kv.second/count;
-                flop_avgs << kv.first << ' ' << avg << '\n';
-                float *instances = flop_instances[kv.first];
-                float dev_sum = 0;
-                for (int i = 0; i < count; i++) {
-                        dev_sum += instances[i];
-                }
-                free(instances);
-                flop_devs << kv.first << ' ' << sqrt(dev_sum/(count-1)) << '\n';
-        }
-
-        for (const auto& kv : turn_totals) {
-                float count = turn_counts[kv.first];
-                float avg = kv.second/count;
-                turn_avgs << kv.first << ' ' << avg << '\n';
-                float *instances = turn_instances[kv.first];
-                float dev_sum = 0;
-                for (int i = 0; i < count; i++) {
-                        dev_sum += instances[i];
-                }
-                free(instances);
-                turn_devs << kv.first << ' ' << sqrt(dev_sum/(count-1)) << '\n';
-        }
+        end = clock();
+        cout << "river took " << ((float) end - begin)/CLOCKS_PER_SEC << '\n';
 
         for (const auto& kv : river_totals) {
-                float count = river_counts[kv.first];
-                float avg = kv.second/count;
+                float avg = kv.second/SAMPLE_COUNT;
                 river_avgs << kv.first << ' ' << avg << '\n';
                 float *instances = river_instances[kv.first];
                 float dev_sum = 0;
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < SAMPLE_COUNT; i++) {
                         dev_sum += instances[i];
                 }
                 free(instances);
-                river_devs << kv.first << ' ' << sqrt(dev_sum/(count-1)) << '\n';
+                river_devs << kv.first << ' ' << sqrt(dev_sum/(SAMPLE_COUNT-1)) << '\n';
         }
 
         flop_avgs.close();

@@ -4,7 +4,7 @@ import os
 # do it for all platforms
 
 newpath=os.environ.get('PATH')
-env = Environment(ENV = { 'PATH' : newpath }, CCFLAGS='-std=c++11 -Ikkzpokerbot -Ikkzpokerbot/pokerstove')
+env = Environment(ENV = { 'PATH' : newpath }, CCFLAGS='-O3 -std=c++11 -Ikkzpokerbot -Ikkzpokerbot/pokerstove')
 
 peval_srcs = ['pokerstove/peval/Card.cpp', 'pokerstove/peval/CardSet.cpp',
               'pokerstove/peval/PokerEvaluation.cpp', 'pokerstove/peval/PokerHand.cpp',

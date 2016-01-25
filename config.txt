@@ -1,44 +1,32 @@
 BIG_BLIND = 2
 STARTING_STACK = 400
-NUMBER_OF_HANDS = 100
+NUMBER_OF_HANDS = 1000
 CONNECTION_TIMEOUT = 10
-TIME_RESTRICTION_PER_GAME = 10
+TIME_RESTRICTION_PER_GAME = 200
 ENFORCE_TIMING_RESTRICTION = true
 HAND_LOG_FILENAME = $PLAYER_1_NAME_$PLAYER_2_NAME
 DISPLAY_ILLEGAL_ACTIONS = false
 DUPLICATE = true
 
-# TYPE can be FOLDER, SOCKET, RANDOM, or CHECKFOLD
-# NAME is the name of bot and determines which persistent datastore the bot
-#      accesses. For example, if you want to test a bot that learns over time
-#      keep the same name so it can access the data it stored in previous
-#      matches.
-# RESET_KEYS determines whether the key/value store is cleared when starting
-#      up. It's false by default.
-
-# FOLDER: Automatically compiles and runs a bot from source.
-# Requires PATH, which is either an absolute or relative (to the jar) path
-# pointing to the source code.
 PLAYER_1_TYPE = FOLDER
 PLAYER_1_PATH = src
 # PLAYER_1_SCONS_ARGS =
 PLAYER_1_NAME = kkz
 PLAYER_1_RESET_KEYS = false
 
-# PLAYER_2_TYPE = FOLDER
-# PLAYER_2_PATH = src2
-# # PLAYER_2_SCONS_ARGS =
-# PLAYER_2_NAME = dup
-# PLAYER_2_RESET_KEYS = false
-
+PLAYER_2_TYPE = FOLDER
+PLAYER_2_PATH = v1
+# PLAYER_2_SCONS_ARGS =
+PLAYER_2_NAME = v1
+PLAYER_2_RESET_KEYS = false
 
 # SOCKET: Engine will wait for bot to connect to a designed socket.
 # PLAYER_1_TYPE = SOCKET
 # PLAYER_1_NAME = kkz
 
 # RANDOM: Engine will use its own bot that plays randomly.
- PLAYER_2_TYPE = RANDOM
- PLAYER_2_NAME = RANDOMBOT
+ # PLAYER_2_TYPE = RANDOM
+ # PLAYER_2_NAME = RANDOMBOT
 
 # CHECKFOLD: Engine will use its own bot that checks/folds as appropriate.
  # PLAYER_2_TYPE = CHECKFOLD

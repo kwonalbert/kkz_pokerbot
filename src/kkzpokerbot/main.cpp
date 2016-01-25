@@ -36,13 +36,6 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  // Read the preflop analysis database
-  std::ifstream rawdata("kkzpokerbot/preflop.data");
-  std::string key;
-  int value;
-  while (rawdata >> key >> value)
-          preflop[key] = value;
-
   // Connect to the engine.
   tcp::iostream stream;
   char port_buf[5];
