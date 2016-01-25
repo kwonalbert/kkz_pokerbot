@@ -338,7 +338,6 @@ handover parse_handover(vector<StringRef> splits) {
 }
 
 double rand_val() {
-        srand(time(NULL));
         return ((double) rand() / (RAND_MAX));
 }
 

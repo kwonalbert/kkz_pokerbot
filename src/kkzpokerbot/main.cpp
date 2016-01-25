@@ -11,7 +11,7 @@ namespace opt = boost::program_options;
 
 int main(int argc, char *argv[])
 {
-
+  srand(time(NULL));
   // Parse out command line options.
   // Usage: pokerbot [-h HOST] PORT
   std::string host = "localhost";
