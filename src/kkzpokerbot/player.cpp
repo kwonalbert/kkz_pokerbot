@@ -583,21 +583,21 @@ public:
     }
 
     int bestBoardHand(const string& board, int boardCards)
-    {   //this returns the strength of the highest possible hand, not accounting for high cards. It basically checks the board to see if there is an opportunity to 
-        //make a full house, a flush, or a straight, and returns the resulting strength. This was added because it was observed that while the average strength 
-        //of the bot is high, it still frequently loses games when it doesn't have the best hand. Rather than calibrate the avg and dev for each possible board to 
-        //make the bot more conservative, this info should allow us to curb the bot's aggressiveness and circumstantially also make it more aggressive when it has 
+    {   //this returns the strength of the highest possible hand, not accounting for high cards. It basically checks the board to see if there is an opportunity to
+        //make a full house, a flush, or a straight, and returns the resulting strength. This was added because it was observed that while the average strength
+        //of the bot is high, it still frequently loses games when it doesn't have the best hand. Rather than calibrate the avg and dev for each possible board to
+        //make the bot more conservative, this info should allow us to curb the bot's aggressiveness and circumstantially also make it more aggressive when it has
         //the best hand.
         int strength = 0;
         vector<std::string> possibleCards = {"2","3","4","5","6","7","8","9","T","J","Q","K","A"}; //length  = 13.
         vector<std::string> possibleSuits = {"c","d","h","s"};
         vector<std::string> possibleHands = {"high card","one pair","two pair","trips","straight","flush","full house","quads","str8 flush"};
-        
+
         std::string boardSuit,boardNum,handNum,handSuit;
         int boardSuitCount[] = {0,0,0,0}; //Number of elements with a given suit
         int boardNumsCount[] = {0,0,0,0,0,0,0,0,0,0,0,0,0}; //number of elements with a given number
         int indexBoardSuit[5];  //stores suit index of each board card (for up to 5 cards but doesn't have to be all 5)
-        int indexBoardNum[5];   
+        int indexBoardNum[5];
 
         //organize the information of the hand and board
         for (int i = 0; i<boardCards; i++)
@@ -651,7 +651,7 @@ public:
             {
                 return strength*13;
             }
-            else 
+            else
             {
                 int straight = 0;
                 int qCount = 0;
@@ -747,6 +747,24 @@ int bet_max(tcp::iostream &stream, getaction *ga) {
         }
 }
 
+int bet_half(tcp::iostream &stream, getaction *ga) {
+        int max = -1;
+        int min = -1;
+        for (int i = 0; i < ga->num_legal_actions; i++) {
+                if (ga->legal_actions[i].t == L_BET) {
+                        max = ga->legal_actions[i].max;
+                        min = ga->legal_actions[i].min;
+                }
+        }
+        if (max != -1 && min != -1) {
+                bet(stream, (max+min)/2);
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
+
 /**
  * Simple example pokerbot, written in C++.
  *
@@ -836,6 +854,7 @@ void Player::run(tcp::iostream &stream) {
                                 strength = (double) driver.postRiverStrengthAnalysis(game, cur_hand, board);
                                 highHandStrength = (double) driver.bestBoardHand(board,ga.num_board_cards);
                         }
+
                         if (last_action.t == BET) {
                                 if (ga.num_board_cards >= 3) { //flop + turn + river
                                         double avg;
@@ -852,52 +871,39 @@ void Player::run(tcp::iostream &stream) {
                                                 dev = river_devs[board];
                                         }
                                         //cout << ga.num_board_cards << ':' << avg << ':' << dev << '\n';
-                                        double foldCallThresh = ((strength-(avg-1.8*dev))/(avg + 2*dev));
+                                        double lower_bound = avg - 1.8*dev;
+                                        double upper_bound;
+                                        if (button)
+                                                upper_bound = avg + 2*dev;
+                                        else
+                                                upper_bound = avg + 3*dev;
+                                        double foldCallThresh = (strength-lower_bound)/(upper_bound - lower_bound);
+                                        foldCallThresh *= foldCallThresh;
                                         double callRaiseThresh = 0.5;
                                         if(ga.pot_size > 70)  {     //this is a game that really matters and they just bet- tighten up
                                             if(strength < highHandStrength) { //we have a hand that isn't in the class of best hands so we should be a bit more conservative
                                                 foldCallThresh = foldCallThresh*0.5; //fold more often if our hand is average;
                                                 callRaiseThresh = 0.9;  //don't get into a raising contest. Our hand is still good, but just call...
-                                            }
-                                            else if(strength > highHandStrength) { //our hand is great - we need to be more aggressive and take advantage
+                                            } else { //our hand is great - we need to be more aggressive and take advantage
                                                 callRaiseThresh = 0.1;      //raise 90% of the time instead of 50% of the time
                                             }
                                         }
 
 
-                                        if (button) { //second
-                                                if (strength < avg - 1.8*dev) {
-                                                        stream << "FOLD\n";
-                                                } else if (strength > avg + 2.0*dev) {
-                                                        if (rand_val() > callRaiseThresh) {
-                                                                if (!raise_max(stream, &ga))
-                                                                        stream << "CALL\n";
-                                                        } else {
+                                        if (strength < lower_bound) {
+                                                stream << "FOLD\n";
+                                        } else if (strength > upper_bound) {
+                                                if (rand_val() > callRaiseThresh) {
+                                                        if (!raise_max(stream, &ga))
                                                                 stream << "CALL\n";
-                                                        }
                                                 } else {
-                                                        if (rand_val() < foldCallThresh) {
-                                                                stream << "CALL\n";
-                                                        } else {
-                                                                stream << "FOLD\n";
-                                                        }
+                                                        stream << "CALL\n";
                                                 }
-                                        } else { //first
-                                                if (strength < avg - 1.8*dev) {
-                                                        stream << "FOLD\n";
-                                                } else if (strength > avg + 3.0*dev) {
-                                                        if (rand_val() > callRaiseThresh) {
-                                                                if (!raise_max(stream, &ga))
-                                                                        stream << "CALL\n";
-                                                        } else {
-                                                                stream << "CALL\n";
-                                                        }
+                                        } else {
+                                                if (rand_val() < foldCallThresh) {
+                                                        stream << "CALL\n";
                                                 } else {
-                                                        if (rand_val() < foldCallThresh) {
-                                                                stream << "CALL\n";
-                                                        } else {
-                                                                stream << "FOLD\n";
-                                                        }
+                                                        stream << "FOLD\n";
                                                 }
                                         }
                                 }
@@ -908,7 +914,7 @@ void Player::run(tcp::iostream &stream) {
                                 } else if (strength < pre_fold_thresh) {
                                         stream << "CHECK\n";
                                 } else {
-                                        double bet_prob = ((strength-pre_fold_thresh) / pre_raise_thresh);
+                                        double bet_prob = (strength-pre_fold_thresh) / pre_raise_thresh;
                                         if (rand_val() > bet_prob) {
                                                 stream << "CHECK\n";
                                         } else {
@@ -930,20 +936,22 @@ void Player::run(tcp::iostream &stream) {
                                                 avg = river_avgs[board];
                                                 dev = river_devs[board];
                                         }
-                                        if (ga.num_board_cards == 5)
-                                            {cout << hand_num << ':' << strength << ':' << avg << ':' << dev << '\n';}
 
-                                        double checkBetThresh = ((strength-(avg - 1.8*dev))/(avg + 3.0*dev));
-                                        if(ga.pot_size > 70)  {     //this is a game that really matters and they just checked
-                                            if(strength > highHandStrength - 13) { //our hand is great - either the best/second best type of hands out there - we should be more aggressive
-                                                checkBetThresh = 0.9;      //Bet 90% of the time
-                                            }
+                                        double lower_bound = avg - 1.8*dev;
+                                        double upper_bound = avg + 3.0*dev;
+
+                                        double checkBetThresh = (strength - lower_bound)/(upper_bound - lower_bound);
+                                        checkBetThresh *= checkBetThresh;
+                                        if (ga.pot_size > 70)  {     //this is a game that really matters and they just checked
+                                                if (strength >= highHandStrength && ga.num_board_cards == 5) { //our hand is great - either the best/second best type of hands out there - we should be more aggressive
+                                                        checkBetThresh = 1;      //Bet 90% of the time
+                                                }
                                         }
 
-                                        if (strength > avg + 3.0*dev) {
+                                        if (strength > upper_bound) {
                                                 if (!bet_max(stream, &ga))
                                                         stream << "CALL\n";
-                                        } else if (strength < avg - 1.8*dev) {
+                                        } else if (strength < lower_bound) {
                                                 stream << "CHECK\n";
                                         } else {
                                                 if (rand_val() > checkBetThresh) {
@@ -970,26 +978,38 @@ void Player::run(tcp::iostream &stream) {
                                         }
                                         //cout << ga.num_board_cards << ':' << avg << ':' << dev << '\n';
 
-                                        if (strength > avg + 3.0*dev) {
-                                                if (rand_val() < (strength-avg)/600) {
-                                                        if (!bet_max(stream, &ga))
-                                                                stream << "CALL\n";
+                                        if (strength > avg + 2.5*dev) {
+                                                if (ga.num_board_cards == 5) { //RIVER
+                                                        if (strength >= highHandStrength) {
+                                                                if (rand_val() < 0.9) {
+                                                                        if (!bet_max(stream, &ga))
+                                                                                stream << "CALL\n";
+                                                                } else {
+                                                                        stream << "CHECK\n";
+                                                                }
+                                                        } else {
+                                                                stream << "CHECK\n";
+                                                        }
                                                 } else {
-                                                        stream << "CHECK\n";
+                                                        if (rand_val() < (strength-avg)/600) {
+                                                                if (!bet_max(stream, &ga))
+                                                                        stream << "CALL\n";
+                                                        } else {
+                                                                stream << "CHECK\n";
+                                                        }
                                                 }
                                         } else if (strength < avg - 1.8*dev) {
                                                 stream << "CHECK\n";
                                         } else {
-                                                //TODO: change for turn and river
-                                                if (rand_val() < 0.015) {
-                                                        if (!bet_max(stream, &ga))
+                                                if (rand_val() < 0.008) {
+                                                        if (!bet_half(stream, &ga))
                                                                 stream << "CALL\n";
                                                 } else {
                                                         stream << "CHECK\n";
                                                 }
                                         }
                                 }
-                        } else if (last_action.t == POST) { if (pre && button)
+                        } else if (last_action.t == POST) { //if (pre && button)
                                 if (strength < pre_fold_thresh) {
                                         stream << "FOLD\n";
                                 } else if (strength > pre_raise_thresh) {
@@ -1006,7 +1026,7 @@ void Player::run(tcp::iostream &stream) {
                                 }
                         } else if (last_action.t == RAISE) {
                                 if (pre) {
-                                        if ((strength > pre_raise_thresh && ga.pot_size < 70) || strength > pre_raise_thresh_high) {
+                                        if ((strength > pre_raise_thresh && ga.pot_size < 30) || strength > pre_raise_thresh_high) {
                                                 if (rand_val() > .5) {
                                                         if (!raise_max(stream, &ga))
                                                                 stream << "CALL\n";
@@ -1031,19 +1051,27 @@ void Player::run(tcp::iostream &stream) {
                                         }
                                         //cout << ga.num_board_cards << ':' << avg << ':' << dev << '\n';
 
-                                        double foldCallThresh = ((strength-(avg-1.8*dev))/(avg + 3.0*dev));
-                                        double callRaiseThresh = 0.5;
-                                        if(ga.pot_size > 70)  {     //this is a game that really matters and they just bet- tighten up
-                                            if(strength < highHandStrength) { //we have a hand that isn't in the class of best hands so we should be a bit more conservative
-                                                foldCallThresh = foldCallThresh*0.5; //fold more often if our hand is average;
-                                                callRaiseThresh = 0.95;  //don't get into a raising contest. Our hand is still good, but just call...
-                                            }
-                                            else if(strength > highHandStrength) { //our hand is great - we need to be more aggressive and take advantage
-                                                callRaiseThresh = 0.1;      //raise 90% of the time instead of 50% of the time
-                                            }
+                                        double lower_bound = avg - 1.8*dev;
+                                        double upper_bound = avg + 3.0*dev;
+                                        double foldCallThresh = (strength-lower_bound)/(upper_bound-lower_bound);
+                                        foldCallThresh *= foldCallThresh;
+                                        double callRaiseThresh = 0.2;
+                                        if (ga.pot_size > 70)  {     //this is a game that really matters and they just bet- tighten up
+                                                if (strength < highHandStrength) { //we have a hand that isn't in the class of best hands so we should be a bit more conservative
+                                                        foldCallThresh = foldCallThresh*0.5; //fold more often if our hand is average;
+                                                        callRaiseThresh = 0.95;  //don't get into a raising contest. Our hand is still good, but just call...
+                                                } else { //our hand is great - we need to be more aggressive and take advantage
+                                                        if (ga.num_board_cards == 3) {
+                                                                callRaiseThresh = 0.5;
+                                                        } else if (ga.num_board_cards == 4) {
+                                                                callRaiseThresh = 0.3;
+                                                        } else {
+                                                                callRaiseThresh = 0.03;      //raise 97% of the time instead of 50% of the time
+                                                        }
+                                                }
                                         }
 
-                                        if (strength > avg + 3.0*dev) {
+                                        if (strength > upper_bound) {
                                                 if (rand_val() > callRaiseThresh) {
                                                         if (!raise_max(stream, &ga))
                                                                 stream << "CALL\n";
