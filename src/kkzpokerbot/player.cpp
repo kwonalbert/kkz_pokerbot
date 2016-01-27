@@ -559,6 +559,62 @@ public:
         vector<std::string> possibleSuits = {"c","d","h","s"};
         vector<std::string> possibleHands = {"high card","one pair","two pair","trips","straight","flush","full house","quads","str8 flush"};
 
+        std::string boardSuit,boardNum,handNum,handSuit;
+        int handSuitCount[] = {0,0,0,0};       //stores a count for each index in possibleSuits
+        int boardSuitCount[] = {0,0,0,0};
+        int handNumsCount[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+        int boardNumsCount[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+        int indexHandSuit[4];       //stores the index in possibleSuits that corresponds to the suit of each card
+        int indexBoardSuit[5];
+        int indexHandNum[4];
+        int indexBoardNum[5];
+
+        //organize the information of the hand and board
+        for (int i = 0; i<5; i++)
+        {
+            boardSuit = board.substr(1+i*2,1);        //should add just the suit of the into one string
+            boardNum = board.substr(0+i*2,1);
+            for (int s = 0; s < 4; s++)
+            {
+                if (boardSuit == possibleSuits[s])
+                {
+                    boardSuitCount[s]++;
+                    indexBoardSuit[i] = s;
+                }
+            }
+            for (int c = 0; c < 13; c++)
+            {
+                if (boardNum == possibleCards[c])
+                {
+                    boardNumsCount[c]++;
+                    indexBoardNum[i] = c;
+                }
+            }
+        }
+
+
+        for (int i = 0; i<4; i++)
+        {
+            handSuit = hand[i].substr(1,1);        //should put just the suit of card  into a string
+            handNum = hand[i].substr(0,1);
+            for (int s = 0; s < 4; s++)
+            {
+                if (handSuit == possibleSuits[s])
+                {
+                    handSuitCount[s]++;
+                    indexHandSuit[i] = s;
+                }
+            }
+            for (int c = 0; c < 13; c++)
+            {
+                if (handNum == possibleCards[c])
+                {
+                    handNumsCount[c]++;
+                    indexHandNum[i] = c;
+                }
+            }
+        }
+
         std::string result,showdown,highCard;
         std::string delimiter1 = ":";
 
@@ -580,6 +636,17 @@ public:
         //pout<<"showdownI: "<<handI<<'\n';
         //pout<<"highCardI: "<<highCardI<<'\n';
         strength = (handI*13 + highCardI);        //the average strength is a scale from 0 to 103 that tells you the average outcome of your current hand
+        if (strength >= 13*5 && strength < 13*6) {
+                int suit;
+                for (int s = 0; s < 4; s++)
+                        if (boardSuitCount[s] >= 3)
+                                suit = s;
+                int max = -1;
+                for (int i = 0; i < 4; i++)
+                        if (indexHandSuit[i] == suit && max < indexHandNum[i])
+                                max = indexHandNum[i];
+                strength = strength - highCardI + max;
+        }
         //pout.close();
         return strength;
     }
@@ -631,27 +698,38 @@ public:
             if(boardNumsCount[c] > 1)
             {
                 strength = 6;
-                fullHouse = c;
+            }
+            if(boardNumsCount[c] >= 1)
+            {
+                    fullHouse = c;
             }
         }
-        if (fullHouse > -1)
+        if (strength > 0 && fullHouse > -1)
         {
             return strength*13+fullHouse;
         }
         else
         {
             int flush = 0;
+            int seen[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             for (int s = 0; s < 4; s++)
             {
                 if(boardSuitCount[s] > 2)
                 {
                     strength = 5;
                     flush = 1;
+                    for (int c = 0; c < boardCards; c++)
+                            if (indexBoardSuit[c] == s)
+                                    seen[indexBoardNum[c]] = 1;
                 }
             }
             if(flush > 0)
             {
-                return strength*13+6;
+                    int max = -1;
+                    for (int c = 0; c < 13; c++)
+                            if (!seen[c] && c > max)
+                                    max = c;
+                    return strength*13+max;
             }
             else
             {
@@ -981,7 +1059,7 @@ void Player::run(tcp::iostream &stream) {
                                                 if (rand_val() > checkBetThresh) {
                                                         stream << "CHECK\n";
                                                 } else {
-                                                        if (!bet_some(stream, &ga, checkBetThresh))
+                                                        if (!bet_some(stream, &ga, checkBetThresh*checkBetThresh))
                                                                 stream << "CALL\n";
                                                 }
                                         }
@@ -1082,7 +1160,8 @@ void Player::run(tcp::iostream &stream) {
                                         double callRaiseThresh = 0.2;
                                         if (ga.pot_size > POT_THRESHOLD)  {     //this is a game that really matters and they just bet- tighten up
                                                 if (strength < highHandStrength) { //we have a hand that isn't in the class of best hands so we should be a bit more conservative
-                                                        foldCallThresh = foldCallThresh*0.5; //fold more often if our hand is average;
+                                                        double ratio = (strength - avg)/(highHandStrength - avg);
+                                                        foldCallThresh = foldCallThresh * ratio; //fold more often if our hand is average;
                                                         callRaiseThresh = 0.95;  //don't get into a raising contest. Our hand is still good, but just call...
                                                 } else { //our hand is great - we need to be more aggressive and take advantage
                                                         if (ga.num_board_cards == 3) {
