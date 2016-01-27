@@ -15,9 +15,9 @@ PLAYER_1_NAME = kkz
 PLAYER_1_RESET_KEYS = false
 
 PLAYER_2_TYPE = FOLDER
-PLAYER_2_PATH = v1
+PLAYER_2_PATH = v2
 # PLAYER_2_SCONS_ARGS =
-PLAYER_2_NAME = v1
+PLAYER_2_NAME = v2
 PLAYER_2_RESET_KEYS = false
 
 # SOCKET: Engine will wait for bot to connect to a designed socket.

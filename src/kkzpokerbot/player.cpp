@@ -15,6 +15,8 @@ using namespace std;
 namespace po = boost::program_options;
 using namespace pokerstove;
 
+#define POT_THRESHOLD 50
+
 class EvalDriver {
 public:
     EvalDriver(const string& game,
@@ -623,18 +625,18 @@ public:
         }
 
         //Check for full house opportunities
-        int fullHouse = 0;
+        int fullHouse = -1;
         for (int c = 0; c<13; c++)
         {
             if(boardNumsCount[c] > 1)
             {
                 strength = 6;
-                fullHouse = 1;
+                fullHouse = c;
             }
         }
-        if (fullHouse > 0)
+        if (fullHouse > -1)
         {
-            return strength*13;
+            return strength*13+fullHouse;
         }
         else
         {
@@ -649,20 +651,25 @@ public:
             }
             if(flush > 0)
             {
-                return strength*13;
+                return strength*13+6;
             }
             else
             {
                 int straight = 0;
                 int qCount = 0;
+                int highStraight = 0;
                 for (int c = 0; c<13; c++)
                 {
+                    if (c > 8 && c != 12)
+                            continue;
                     qCount = 0;
-                    for (int q = c; q<c+5 && q<13; q++)
+                    for (int q = c; q<c+5; q++)
                     {
-                        if(boardNumsCount[c] == 1)
+                        if(boardNumsCount[q%13] == 1)
                             {
                                 qCount++;
+                                if (highStraight < (q%13))
+                                        highStraight = q % 13;
                             }
                     }
                     if(qCount >=3)
@@ -671,11 +678,11 @@ public:
                         strength = 4;
                     }
                 }
-                if(straight > 0)
+                if(straight)
                 {
-                    return strength*13;
+                    return strength*13+highStraight;
                 }
-                else {return 3*13;} //the minimum opportunity is trips. There's always an opportunity for trips
+                else {return 4*13;} //the minimum opportunity is trips. There's always an opportunity for trips
             }
         }
     }
@@ -758,6 +765,23 @@ int bet_half(tcp::iostream &stream, getaction *ga) {
         }
         if (max != -1 && min != -1) {
                 bet(stream, (max+min)/2);
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
+int bet_some(tcp::iostream &stream, getaction *ga, double prob) {
+        int max = -1;
+        int min = -1;
+        for (int i = 0; i < ga->num_legal_actions; i++) {
+                if (ga->legal_actions[i].t == L_BET) {
+                        max = ga->legal_actions[i].max;
+                        min = ga->legal_actions[i].min;
+                }
+        }
+        if (max != -1 && min != -1) {
+                bet(stream, ((int)((max-min)*prob)) + min);
                 return 1;
         } else {
                 return 0;
@@ -873,15 +897,15 @@ void Player::run(tcp::iostream &stream) {
                                         //cout << ga.num_board_cards << ':' << avg << ':' << dev << '\n';
                                         double lower_bound = avg - 1.8*dev;
                                         double upper_bound;
-                                        if (button)
+                                        if (button && ga.num_board_cards == 3)
                                                 upper_bound = avg + 2*dev;
                                         else
                                                 upper_bound = avg + 3*dev;
                                         double foldCallThresh = (strength-lower_bound)/(upper_bound - lower_bound);
                                         foldCallThresh *= foldCallThresh;
                                         double callRaiseThresh = 0.5;
-                                        if(ga.pot_size > 70)  {     //this is a game that really matters and they just bet- tighten up
-                                            if(strength < highHandStrength) { //we have a hand that isn't in the class of best hands so we should be a bit more conservative
+                                        if (ga.pot_size > POT_THRESHOLD)  {     //this is a game that really matters and they just bet- tighten up
+                                            if (strength < highHandStrength) { //we have a hand that isn't in the class of best hands so we should be a bit more conservative
                                                 foldCallThresh = foldCallThresh*0.5; //fold more often if our hand is average;
                                                 callRaiseThresh = 0.9;  //don't get into a raising contest. Our hand is still good, but just call...
                                             } else { //our hand is great - we need to be more aggressive and take advantage
@@ -942,7 +966,7 @@ void Player::run(tcp::iostream &stream) {
 
                                         double checkBetThresh = (strength - lower_bound)/(upper_bound - lower_bound);
                                         checkBetThresh *= checkBetThresh;
-                                        if (ga.pot_size > 70)  {     //this is a game that really matters and they just checked
+                                        if (ga.pot_size > POT_THRESHOLD)  {     //this is a game that really matters and they just checked
                                                 if (strength >= highHandStrength && ga.num_board_cards == 5) { //our hand is great - either the best/second best type of hands out there - we should be more aggressive
                                                         checkBetThresh = 1;      //Bet 90% of the time
                                                 }
@@ -957,7 +981,7 @@ void Player::run(tcp::iostream &stream) {
                                                 if (rand_val() > checkBetThresh) {
                                                         stream << "CHECK\n";
                                                 } else {
-                                                        if (!bet_max(stream, &ga))
+                                                        if (!bet_some(stream, &ga, checkBetThresh))
                                                                 stream << "CALL\n";
                                                 }
                                         }
@@ -1056,13 +1080,13 @@ void Player::run(tcp::iostream &stream) {
                                         double foldCallThresh = (strength-lower_bound)/(upper_bound-lower_bound);
                                         foldCallThresh *= foldCallThresh;
                                         double callRaiseThresh = 0.2;
-                                        if (ga.pot_size > 70)  {     //this is a game that really matters and they just bet- tighten up
+                                        if (ga.pot_size > POT_THRESHOLD)  {     //this is a game that really matters and they just bet- tighten up
                                                 if (strength < highHandStrength) { //we have a hand that isn't in the class of best hands so we should be a bit more conservative
                                                         foldCallThresh = foldCallThresh*0.5; //fold more often if our hand is average;
                                                         callRaiseThresh = 0.95;  //don't get into a raising contest. Our hand is still good, but just call...
                                                 } else { //our hand is great - we need to be more aggressive and take advantage
                                                         if (ga.num_board_cards == 3) {
-                                                                callRaiseThresh = 0.5;
+                                                                callRaiseThresh = 0.95;
                                                         } else if (ga.num_board_cards == 4) {
                                                                 callRaiseThresh = 0.3;
                                                         } else {
